@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Gestor de Inventario - Tienda Online</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function loadCatalog() {
+            const response = await fetch('/api/catalogo');
+            if (!response.ok) {
+                alert('Error cargando catálogo: ' + await response.text());
+                return;
+            }
+            const data = await response.json();
+            const tbody = document.getElementById('catalog-body');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.stock}</td>
+                    <td>${p.activeDiscountPercent}</td>
+                    <td>${p.finalPrice}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function callTest(endpoint) {
+            const response = await fetch(endpoint, { method: 'POST' });
+            const msg = await response.json();
+            alert(msg.message || msg);
+        }
+
+        window.onload = loadCatalog;
+    </script>
+</head>
+<body>
+<header>
+    <h1>Panel Gestor de Inventario</h1>
+    <p>Control de productos, existencias y ofertas</p>
+</header>
+
+<div class="main-container">
+
+    <div class="banner-placeholder">
+        Espacio reservado para imágenes de productos / inventario
+    </div>
+
+    <div class="card">
+        <h2>Pruebas de inventario</h2>
+        <button onclick="callTest('/api/tests/gestor/entrada-inventario')">
+            Probar sp_RegistrarEntradaInventario
+        </button><br>
+        <button onclick="callTest('/api/tests/gestor/revisar-envejecido')">
+            Probar sp_RevisarInventarioEnvejecido
+        </button><br>
+        <a href="/logout"><button>Salir</button></a>
+    </div>
+
+    <div class="card">
+        <h2>Inventario resumido</h2>
+        <table border="1" width="100%">
+            <thead>
+            <tr>
+                <th>ID Producto</th>
+                <th>Nombre</th>
+                <th>Stock total</th>
+                <th>% Descuento</th>
+                <th>Precio final</th>
+            </tr>
+            </thead>
+            <tbody id="catalog-body"></tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

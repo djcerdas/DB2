@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel OWNER - Tienda Online</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function loadCatalog() {
+            const response = await fetch('/api/catalogo');
+            if (!response.ok) {
+                alert('Error cargando catálogo: ' + await response.text());
+                return;
+            }
+            const data = await response.json();
+            const tbody = document.getElementById('catalog-body');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.style}</td>
+                    <td>${p.size}</td>
+                    <td>${p.color}</td>
+                    <td>${p.price}</td>
+                    <td>${p.activeDiscountPercent}</td>
+                    <td>${p.finalPrice}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function callTest(endpoint) {
+            const response = await fetch(endpoint, { method: 'POST' });
+            const msg = await response.json();
+            alert(msg.message || msg);
+        }
+
+        window.onload = loadCatalog;
+    </script>
+</head>
+<body>
+<header>
+    <h1>Panel OWNER (Dueño de negocio)</h1>
+    <p>Visión general de la tienda y pruebas completas de la base de datos</p>
+</header>
+
+<div class="main-container">
+
+    <div class="banner-placeholder">
+        Espacio reservado para banner / imagen principal de la tienda
+    </div>
+
+    <div class="card">
+        <h2>Acciones rápidas (pruebas de BD)</h2>
+        <p>Estos botones ejecutan procedimientos almacenados con TRY/CATCH en SQL Server.</p>
+        <button onclick="callTest('/api/tests/owner/registrar-producto')">
+            Probar sp_RegistrarProducto (producto demo)
+        </button><br>
+        <button onclick="callTest('/api/tests/owner/entrada-inventario')">
+            Probar sp_RegistrarEntradaInventario
+        </button><br>
+        <button onclick="callTest('/api/tests/owner/revisar-envejecido')">
+            Probar sp_RevisarInventarioEnvejecido
+        </button><br>
+        <a href="/logout"><button>Salir</button></a>
+    </div>
+
+    <div class="card">
+        <h2>Catálogo de productos</h2>
+        <table border="1" width="100%">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Estilo</th>
+                <th>Talla</th>
+                <th>Color</th>
+                <th>Precio base</th>
+                <th>% Descuento</th>
+                <th>Precio final</th>
+            </tr>
+            </thead>
+            <tbody id="catalog-body"></tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

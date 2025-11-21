@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Software web para potenciar tienda de ropa - Login</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+    <h1>Software web para potenciar tienda de ropa</h1>
+    <p>Proyecto académico - Bases de Datos II</p>
+</header>
+
+<div class="main-container">
+    <div class="card">
+        <h2>Inicio de sesión</h2>
+        <form method="post" action="/login">
+            <label>
+                Correo electrónico:<br>
+                <input type="email" name="email" required>
+            </label>
+            <br><br>
+            <label>
+                Contraseña:<br>
+                <input type="password" name="password" required>
+            </label>
+            <br><br>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Usuarios de prueba (semillas)</h3>
+        <ul>
+            <li>OWNER (Dueño): owner@tienda.local / Owner123!</li>
+            <li>GESTOR INVENTARIO: inventario@tienda.local / Gestor123!</li>
+            <li>VENDEDOR: ventas@tienda.local / Vendedor123!</li>
+            <li>CLIENTE: cliente@tienda.local / Cliente123!</li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

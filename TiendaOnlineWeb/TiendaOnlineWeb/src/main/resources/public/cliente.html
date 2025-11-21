@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo para Cliente - Tienda Online</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function loadCatalog() {
+            const response = await fetch('/api/catalogo');
+            if (!response.ok) {
+                alert('Error cargando catálogo: ' + await response.text());
+                return;
+            }
+            const data = await response.json();
+            const container = document.getElementById('catalog-container');
+            container.innerHTML = '';
+            data.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h3>${p.name}</h3>
+                    <p>Estilo: ${p.style}</p>
+                    <p>Talla: ${p.size}</p>
+                    <p>Color: ${p.color}</p>
+                    <p>Precio: ₡${p.finalPrice}</p>
+                    <p>Stock: ${p.stock}</p>
+                    <div class="banner-placeholder" style="height:120px;">
+                        Espacio para imagen del producto
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.onload = loadCatalog;
+    </script>
+</head>
+<body>
+<header>
+    <h1>Tienda Online - Catálogo para Cliente</h1>
+    <p>Vista simplificada de los productos disponibles</p>
+</header>
+
+<div class="main-container">
+    <a href="/logout"><button>Salir</button></a>
+
+    <div id="catalog-container"></div>
+</div>
+</body>
+</html>

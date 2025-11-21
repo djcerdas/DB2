@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Vendedor - Tienda Online</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function loadCatalog() {
+            const response = await fetch('/api/catalogo');
+            if (!response.ok) {
+                alert('Error cargando catálogo: ' + await response.text());
+                return;
+            }
+            const data = await response.json();
+            const tbody = document.getElementById('catalog-body');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.name}</td>
+                    <td>${p.style}</td>
+                    <td>${p.size}</td>
+                    <td>${p.color}</td>
+                    <td>${p.finalPrice}</td>
+                    <td>${p.stock}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function callTest(endpoint) {
+            const response = await fetch(endpoint, { method: 'POST' });
+            const msg = await response.json();
+            alert(msg.message || msg);
+        }
+
+        window.onload = loadCatalog;
+    </script>
+</head>
+<body>
+<header>
+    <h1>Panel Vendedor</h1>
+    <p>Consulta rápida de productos y prueba de venta demo</p>
+</header>
+
+<div class="main-container">
+
+    <div class="banner-placeholder">
+        Espacio reservado para imagen del punto de venta / mostrador
+    </div>
+
+    <div class="card">
+        <h2>Pruebas de ventas</h2>
+        <button onclick="callTest('/api/tests/vendedor/venta-demo')">
+            Probar sp_RegistrarVentaSimple (venta demo)
+        </button><br>
+        <a href="/logout"><button>Salir</button></a>
+    </div>
+
+    <div class="card">
+        <h2>Catálogo para venta</h2>
+        <table border="1" width="100%">
+            <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Estilo</th>
+                <th>Talla</th>
+                <th>Color</th>
+                <th>Precio final</th>
+                <th>Stock disponible</th>
+            </tr>
+            </thead>
+            <tbody id="catalog-body"></tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
