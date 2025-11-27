@@ -268,7 +268,7 @@ private static final String URL =
   + "trustServerCertificate=true;";
 
 private static final String USER = "app_user";
-private static final String PASS = "ChangeThis!123";
+private static final String PASS = "YOUR SECRET HERE *****";
 ```
 
 Se usa **127.0.0.1** para evitar problemas de resolución DNS con hostnames como `DAVO`.
