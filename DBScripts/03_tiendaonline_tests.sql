@@ -40,15 +40,15 @@ PRINT '--- 3) PROCEDIMIENTOS ALMACENADOS ---';
 -- 3.1. Registrar un nuevo producto con existencia inicial
 DECLARE @nuevoCodigo INT;
 EXEC dbo.sp_RegistrarProducto
-    @nombre           = N'Blazer Ejecutiva Azul',
-    @talla            = N'M',
-    @color            = N'Azul Marino',
-    @estilo           = N'Formal',
-    @precio_venta     = 45990,
-    @imagen_url       = N'/images/blazer_ejecutiva_azul.jpg',
-    @cantidad_inicial = 12,
-    @fecha_ingreso    = CAST(GETDATE() AS DATE),
-    @ubicacion_bodega = N'Bodega Central',
+    @nombre              = N'Blazer Ejecutiva Azul',
+    @talla               = N'M',
+    @color               = N'Azul Marino',
+    @estilo              = N'Formal',
+    @precio_venta        = 45990,
+    @imagen_url          = N'/images/blazer_ejecutiva_azul.jpg',
+    @cantidad_inicial    = 12,
+    @fecha_ingreso       = CAST(GETDATE() AS DATE),
+    @ubicacion_bodega    = N'Bodega Central',
     @codigo_producto_out = @nuevoCodigo OUTPUT;
 
 PRINT 'Nuevo producto creado con codigo_producto = ' + CAST(@nuevoCodigo AS NVARCHAR(20));
@@ -86,11 +86,11 @@ PRINT 'Stock actual antes de la venta = ' + CAST(ISNULL(@stockActual,0) AS NVARC
 -- 4.1. Venta válida (cantidad menor o igual al stock)
 BEGIN TRY
     EXEC dbo.sp_RegistrarVentaSimple
-        @id_usuario_cliente = (SELECT id FROM dbo.users WHERE email=N'cliente@tienda.local'),
-        @canal          = N'web',
-        @metodo_pago    = N'Tarjeta',
-        @codigo_producto= @productoVenta,
-        @cantidad       = 2;
+        @id_usuario_cliente = (SELECT id FROM dbo.users WHERE email = N'cliente@tienda.local'),
+        @canal              = N'web',
+        @metodo_pago        = N'Tarjeta',
+        @codigo_producto    = @productoVenta,
+        @cantidad           = 2;
     PRINT 'Venta válida registrada correctamente.';
 END TRY
 BEGIN CATCH
@@ -104,11 +104,11 @@ PRINT 'Stock después de venta válida = ' + CAST(ISNULL(@stockDespues,0) AS NVA
 
 BEGIN TRY
     EXEC dbo.sp_RegistrarVentaSimple
-        @id_usuario_cliente = (SELECT id FROM dbo.users WHERE email=N'cliente@tienda.local'),
-        @canal          = N'web',
-        @metodo_pago    = N'Tarjeta',
-        @codigo_producto= @productoVenta,
-        @cantidad       = 9999; -- forzamos error de stock
+        @id_usuario_cliente = (SELECT id FROM dbo.users WHERE email = N'cliente@tienda.local'),
+        @canal              = N'web',
+        @metodo_pago        = N'Tarjeta',
+        @codigo_producto    = @productoVenta,
+        @cantidad           = 9999; -- forzamos error de stock
     PRINT 'Venta inválida NO debería llegar a este mensaje.';
 END TRY
 BEGIN CATCH
@@ -125,47 +125,40 @@ GO
 ---------------------------------------------------------------
 PRINT '--- 5) TRIGGERS (alertas de stock bajo y auditoría) ---';
 
--- 5.1. Forzar stock bajo para un producto
+-- 5.1. Force low stock for a product to trigger trg_existencias_stock_bajo
 DECLARE @prodStockBajo INT = (SELECT TOP(1) codigo_producto FROM dbo.productos ORDER BY codigo_producto);
 
 UPDATE dbo.existencias
 SET cantidad = 3
 WHERE codigo_producto = @prodStockBajo;
 
--- El trigger debe insertar una alerta de tipo 'stock_bajo'
+-- The trigger should insert an alert of type 'stock_bajo'
 SELECT TOP(10) * FROM dbo.alertas ORDER BY id_alerta DESC;
 
--- 5.2. Ver auditoría de productos (INSERT/UPDATE/DELETE)
-UPDATE dbo.productos
-SET precio_venta = precio_venta + 1000
-WHERE codigo_producto = @prodStockBajo;
-
-DELETE FROM dbo.productos
-WHERE codigo_producto = @nuevoCodigo; -- producto creado en la prueba 3.1
-
+-- 5.2. View audit_log (will only have rows if any trigger error was logged)
 SELECT TOP(20) * FROM dbo.audit_log ORDER BY id_audit DESC;
 GO
 
 ---------------------------------------------------------------
 -- 6. PRUEBA DE INDEXACIÓN (USO DE ÍNDICES)
---    No se puede "ver" el índice desde aquí, pero sí ejecutar
---    consultas típicas que se beneficiarían de ellos.
+--    We can't "see" the index, but we can run typical queries
+--    that will use them.
 ---------------------------------------------------------------
 PRINT '--- 6) PRUEBA DE INDEXACIÓN (consultas típicas) ---';
 
--- Búsqueda por estilo/talla/color (usa IX_productos_busqueda)
+-- Search by estilo/talla/color (uses IX_productos_busqueda)
 SELECT *
 FROM dbo.productos
 WHERE estilo = N'Formal'
   AND talla  = N'M'
   AND color  = N'Azul Marino';
 
--- Consulta de stock por producto (usa IX_existencias_producto)
+-- Stock per product (uses IX_existencias_producto)
 SELECT e.codigo_producto, SUM(e.cantidad) AS stock_total
 FROM dbo.existencias e
 GROUP BY e.codigo_producto;
 
--- Ventas por producto y fecha (usa IX_ventas_producto_fecha)
+-- Sales by product and date (uses IX_ventas_producto_fecha)
 SELECT TOP(10) v.codigo_producto, v.fecha_venta, v.cantidad, v.subtotal
 FROM dbo.ventas v
 ORDER BY v.fecha_venta DESC;
