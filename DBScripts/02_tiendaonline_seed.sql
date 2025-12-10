@@ -98,6 +98,8 @@ GO
 
 ---------------------------------------------------------------
 -- 7. EXISTENCIAS INICIALES
+--    NOTA: productos con codigo_producto IMPAR quedan con stock 8
+--          y aparecerán en la vista v_StockBajo (stock < 10).
 ---------------------------------------------------------------
 INSERT INTO dbo.existencias (codigo_producto, fecha_ingreso, cantidad, ubicacion_bodega)
 SELECT codigo_producto,
@@ -139,6 +141,63 @@ BEGIN
          N'{"colores":["rojo","negro"],"estilos":["Formal","Fiesta"]}',
          35000, 3, NULL);
 END
+GO
+
+---------------------------------------------------------------
+-- 10. FACTURAS Y VENTAS DEMO (PARA v_VentasPorDia)
+--     Se generan 7 días de ventas para el cliente demo.
+---------------------------------------------------------------
+DECLARE @clienteId2 INT = (SELECT id FROM dbo.users WHERE email = N'cliente@tienda.local');
+DECLARE @hoy DATE = CAST(SYSUTCDATETIME() AS DATE);
+
+-- Día 0 (hoy)
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, 0, @hoy), @clienteId2, N'web', N'Tarjeta', 19990);
+DECLARE @f1 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f1, 1, 1, 19990);
+
+-- Día -1
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -1, @hoy), @clienteId2, N'web', N'Tarjeta', 24990);
+DECLARE @f2 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f2, 2, 1, 24990);
+
+-- Día -2
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -2, @hoy), @clienteId2, N'web', N'Tarjeta', 19990);
+DECLARE @f3 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f3, 3, 1, 19990);
+
+-- Día -3
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -3, @hoy), @clienteId2, N'tienda', N'Efectivo', 29990);
+DECLARE @f4 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f4, 4, 1, 29990);
+
+-- Día -4
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -4, @hoy), @clienteId2, N'tienda', N'Tarjeta', 34990);
+DECLARE @f5 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f5, 5, 1, 34990);
+
+-- Día -5
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -5, @hoy), @clienteId2, N'web', N'Tarjeta', 39990);
+DECLARE @f6 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f6, 6, 1, 39990);
+
+-- Día -6
+INSERT INTO dbo.facturas (fecha_venta, id_usuario_cliente, canal, metodo_pago, total_sin_iva)
+VALUES (DATEADD(DAY, -6, @hoy), @clienteId2, N'redes', N'Tarjeta', 19990);
+DECLARE @f7 BIGINT = SCOPE_IDENTITY();
+INSERT INTO dbo.ventas (numero_factura, codigo_producto, cantidad, precio_unit_sin_IVA)
+VALUES (@f7, 7, 1, 19990);
 GO
 
 PRINT 'Datos de semilla cargados correctamente.';
