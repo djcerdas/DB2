@@ -1,314 +1,173 @@
-# TiendaOnline – Software web para potenciar tienda de ropa
+# TiendaOnline — Academic Web System for Inventory & Sales
 
-Proyecto académico para el curso **Bases de Datos II** (Universidad Latina de Costa Rica).
+Proyecto académico para el curso Bases de Datos II (Universidad Latina de Costa Rica).
 
-Autores:  
-- Jerami Thomas Dudley Cerdas  
-- David Jesús Cerdas Pérez  
+Autores:
+- David Jesús Cerdas Pérez
+- Jerami Thomas Dudley Cerdas
 
-Profesor:  
+Profesor:
 - Marlon Obando Cordero
 
----
-
-## 1. Descripción general
+Este proyecto consiste en una aplicación web desarrollada en Java, un backend con Spark Framework, un repositorio DAO con JDBC, y una base de datos SQL Server completamente normalizada, segura y documentada.
+
+------------------------------------------------------------
+1. PROJECT STRUCTURE
+------------------------------------------------------------
+
+/TiendaOnlineWeb
+│
+├─ sql/
+│   ├─ 01_tiendaonline_schema.sql
+│   ├─ 02_tiendaonline_seed.sql
+│   └─ 03_tiendaonline_test_queries.sql
+│
+├─ src/main/java/com/ulatina/basesdedatos2/tiendaonline/
+│   ├─ model/
+│   ├─ repo/
+│   ├─ service/
+│   └─ web/
+│
+├─ resources/
+│   └─ application.properties
+│
+└─ public/
+    ├─ index.html
+    ├─ gestor.html
+    └─ assets/
+
+------------------------------------------------------------
+2. SQL FILES OVERVIEW
+------------------------------------------------------------
+
+01_tiendaonline_schema.sql:
+- Crea la base de datos tiendaonline
+- Tablas normalizadas
+- Vistas (v_CatalogoProductos, v_StockBajo, v_VentasPorDia)
+- Procedimientos almacenados
+- Trigger de stock bajo
+- Roles de BD (app_sysadmin, app_owner, app_rw, app_ro)
+- Usuario técnico app_user (login + user + role)
+- Prueba de permisos con EXECUTE AS USER
+
+02_tiendaonline_seed.sql:
+- Inserta proveedores
+- Inserta productos
+- Inserta existencias
+- Inserta ofertas
+- Inserta usuarios, roles y asignaciones
+- Inserta facturas de prueba
+
+03_tiendaonline_test_queries.sql:
+- Pruebas del catálogo
+- Pruebas de stock
+- Pruebas de ventas por día
+- Validación de permisos
+- Ejecución de SPs
+
+------------------------------------------------------------
+3. INSTALLING SQL SERVER
+------------------------------------------------------------
+
+Requisitos:
+- SQL Server 2019 o superior
+- SQL Server Management Studio (SSMS)
+
+Pasos:
+1. Abrir SSMS y conectarse al servidor
+2. Ejecutar 01_tiendaonline_schema.sql
+3. Ejecutar 02_tiendaonline_seed.sql
+4. (Opcional) Ejecutar 03_tiendaonline_test_queries.sql
+
+------------------------------------------------------------
+4. ECLIPSE INSTALLATION & JAVA SETUP
+------------------------------------------------------------
+
+1. Instalar Eclipse IDE:
+   https://www.eclipse.org/downloads/
+
+2. Crear proyecto Maven:
+   File → New → Maven Project
+   Seleccionar: maven-archetype-quickstart
+
+3. Agregar dependencias al pom.xml:
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>2.9.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.4.2.jre11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10</version>
+        </dependency>
+    </dependencies>
 
-Este proyecto implementa una **aplicación web en Java** conectada a **Microsoft SQL Server** para gestionar inventario, ventas y operaciones internas de una tienda de ropa. Incluye:
-
-- Catálogo de productos con talla, estilo, color y precio.
-- Control de existencias y bodega.
-- Ofertas automáticas basadas en inventario envejecido.
-- Registro de ventas con control de concurrencia.
-- Trigger de stock bajo.
-- Vistas de catálogo, stock y métricas diarias.
-- Roles de aplicación (OWNER, GestorInventario, Vendedor, Cliente).
-- Roles de base de datos (`app_sysadmin`, `app_owner`, `app_rw`, `app_ro`).
-- Stored procedures con TRY/CATCH y transacciones.
+------------------------------------------------------------
+5. DATABASE CONFIGURATION
+------------------------------------------------------------
 
-La versión actual corresponde a **TiendaOnline 1.0** (referida como *TiendaOnline* en el código).
-
----
+Archivo:
+resources/application.properties
 
-## 2. Estructura de los scripts SQL
+Contenido:
 
-El proyecto utiliza **tres scripts principales**:
+db.url=jdbc:sqlserver://localhost:1433;databaseName=tiendaonline;encrypt=true;trustServerCertificate=true;
+db.username=app_user
+db.password=*************
+db.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
-### 2.1. `01_tiendaonline_schema.sql`
-- Crea la base de datos `tiendaonline`.  
-- Crea tablas normalizadas del dominio:
-  - `roles`, `users`, `user_roles`, `audit_log`
-  - `proveedores`, `productos`, `productos_proveedores`
-  - `existencias`, `ofertas`
-  - `facturas`, `ventas`
-  - `usuarios_frecuentes`, `alertas`, `notificaciones`
-- Crea índices de búsqueda y optimización.
-- Crea vistas:
-  - `v_CatalogoProductos`
-  - `v_StockBajo`
-  - `v_VentasPorDia`
-- Define procedimientos almacenados:
-  - `sp_RegistrarProducto`
-  - `sp_RegistrarEntradaInventario`
-  - `sp_RegistrarVentaSimple`
-  - `sp_RevisarInventarioEnvejecido`
-- Crea trigger:
-  - `trg_existencias_stock_bajo`
-- Crea roles de base de datos:
-  - `app_sysadmin`, `app_owner`, `app_rw`, `app_ro`
-- Asigna permisos por rol.
-
----
-
-### 2.2. `02_tiendaonline_seed.sql`
-Incluye datos iniciales:
+------------------------------------------------------------
+6. JAVA PACKAGE STRUCTURE
+------------------------------------------------------------
 
-- Inserción de roles de aplicación.  
-- Usuarios con distintos perfiles.  
-- Proveedores, productos y existencias.  
-- Ofertas iniciales.  
+El paquete principal debe ser:
 
-Permite comenzar a usar la aplicación sin cargar datos manualmente.
+com.ulatina.basesdedatos2.tiendaonline
 
----
+Subcarpetas:
+- model
+- repo
+- service
+- web
 
-### 2.3. `03_tiendaonline_tests.sql`
-Script para pruebas:
+------------------------------------------------------------
+7. RUNNING THE APPLICATION
+------------------------------------------------------------
 
-- Consultas a vistas.  
-- Pruebas de procedimientos.  
-- Registro de productos y entradas de inventario.  
-- Registro de ventas y verificación de concurrencia.  
-- Verificación del trigger de stock bajo.
-
----
-
-## 3. Cómo instalar la base de datos
-
-### 3.1. Requisitos
-- Microsoft SQL Server (Developer / Express / Standard).  
-- SSMS (SQL Server Management Studio).  
-- Permisos para crear bases de datos.
+Ejecutar la clase:
 
-### 3.2. Pasos
-1. Abrir SSMS.  
-2. Ejecutar:
+src/main/java/com/ulatina/basesdedatos2/tiendaonline/App.java
 
-```sql
-:r 01_tiendaonline_schema.sql
-```
+El servidor iniciará en:
 
-3. Confirmar creación:
+http://localhost:8080/
 
-```sql
-SELECT name FROM sys.databases WHERE name = 'tiendaonline';
-```
+------------------------------------------------------------
+8. SYSTEM PAGES & API ENDPOINTS
+------------------------------------------------------------
 
-4. Ejecutar seed:
+Home page:
+http://localhost:8080/index.html
 
-```sql
-:r 02_tiendaonline_seed.sql
-```
+Inventory dashboard:
+http://localhost:8080/gestor.html
 
-5. Opcional: ejecutar pruebas:
+API - Product catalog:
+http://localhost:8080/api/catalog
 
-```sql
-:r 03_tiendaonline_tests.sql
-```
+API - Inventory operations:
+http://localhost:8080/api/inventory
 
----
-
-## 4. Proyecto web en Eclipse
-
-### 4.1. Tecnologías utilizadas
-- Java 17  
-- Maven  
-- Spark Java  
-- JDBC (SQL Server Driver)  
-- HTML / JSP  
-- CSS minimalista  
-
-### 4.2. Estructura del proyecto
-
-```
-TiendaOnlineWeb/
- ├── pom.xml
- ├── src/main/java/com/ulatina/basesdedatos2/tiendaonline/
- │     ├── config/
- │     ├── controller/
- │     ├── repository/
- │     ├── service/
- │     └── web/ (Routes.java)
- └── src/main/resources/public/
-       ├── style.css
-       ├── login.html
-       ├── owner.html
-       ├── gestor.html
-       ├── vendedor.html
-       └── cliente.html
-```
-
-Cada pantalla está alineada al **rol** del usuario.
-
----
-
-## 5. Configuración de conexión a SQL Server (JDBC)
-
-La aplicación usa JDBC para conectar a SQL Server.  
-Antes de usar Java, **SQL Server debe aceptar conexiones TCP/IP**.
-
----
-
-# 6. Habilitar SQL Server para conexiones JDBC (TCP/IP)
-
-Esta sección documenta los pasos necesarios para permitir que Java se conecte a MS SQL Server.
-
----
-
-## 6.1. Habilitar TCP/IP
-
-1. Abrir **SQL Server Configuration Manager**.  
-2. Ir a:
-```
-SQL Server Network Configuration → Protocols for MSSQLSERVER
-```
-3. Habilitar:
-```
-TCP/IP → Enabled = Yes
-Listen All = Yes
-```
-4. En la pestaña **IP Addresses**, al final (IPAll):
-
-```
-TCP Dynamic Ports:   (vacío)
-TCP Port:            1433
-```
-
-> Es obligatorio **borrar** el valor “TCP Dynamic Ports”.  
-> Si no, SQL Server no escuchará en 1433.
-
-5. Guardar cambios.
-
----
-
-## 6.2. Reiniciar el servicio SQL Server
-
-En SQL Server Configuration Manager:
-
-```
-SQL Server Services → SQL Server (MSSQLSERVER) → Restart
-```
-
----
-
-## 6.3. Verificar que el puerto 1433 está activo
-
-### Opción A: usando DMV
-
-```sql
-SELECT * FROM sys.dm_tcp_listener_states;
-```
-
-Debe mostrar puerto **1433**.
-
-### Opción B: usando netstat
-
-```cmd
-netstat -an | find "1433"
-```
-
-Debe mostrar:
-
-```
-TCP    0.0.0.0:1433     LISTENING
-```
-
----
-
-## 6.4. Probar la conexión con app_user vía TCP
-
-En SSMS usar:
-
-```
-Server name: tcp:127.0.0.1,1433
-Authentication: SQL Server Authentication
-Login: app_user
-Password: ChangeThis!123
-```
-
----
-
-## 6.5. Confirmar que la sesión está usando TCP
-
-```sql
-SELECT protocol_desc, local_tcp_port
-FROM sys.dm_exec_connections
-WHERE session_id = @@SPID;
-```
-
-Debe mostrar:
-
-```
-protocol_desc = TCP
-local_tcp_port = 1433
-```
-
-Si aparece **Shared Memory**, la conexión no es TCP.
-
----
-
-## 6.6. Configuración JDBC final en Java
-
-Usar esta URL:
-
-```java
-private static final String URL =
-    "jdbc:sqlserver://127.0.0.1:1433;"
-  + "databaseName=tiendaonline;"
-  + "encrypt=true;"
-  + "trustServerCertificate=true;";
-
-private static final String USER = "app_user";
-private static final String PASS = "YOUR SECRET HERE *****";
-```
-
-Se usa **127.0.0.1** para evitar problemas de resolución DNS con hostnames como `DAVO`.
-
----
-
-## 7. Importar el proyecto en Eclipse
-
-1. Abrir Eclipse.  
-2. `File → Import...`  
-3. `Existing Maven Projects`  
-4. Seleccionar carpeta `TiendaOnlineWeb/`  
-5. Completar el asistente.  
-6. Esperar a que Maven instale dependencias.  
-
----
-
-## 8. Ejecutar la aplicación
-
-1. Ejecutar `Routes.java` como **Java Application**.  
-2. Abrir navegador:
-
-```
-http://localhost:4567/
-```
-
-3. Iniciar sesión con usuarios del seed.  
-4. Explorar pantallas según el rol.  
-
----
-
-## 9. Notas finales
-
-- Este proyecto demuestra:
-  - Normalización.
-  - Roles y control de acceso.
-  - Vistas e índices.
-  - Stored Procedures con TRY/CATCH.
-  - Trigger de stock bajo.
-  - Control de concurrencia.
-  - Integración Java + SQL Server vía JDBC.
-- La documentación está diseñada para defensa académica y presentación a cliente final.
+API - Register sale:
+http://localhost:8080/api/sell
 
