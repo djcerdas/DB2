@@ -14,28 +14,28 @@ Este proyecto consiste en una aplicación web desarrollada en Java, un backend c
 ------------------------------------------------------------
 1. PROJECT STRUCTURE
 ------------------------------------------------------------
-
+```
 /TiendaOnlineWeb
 │
 ├─ sql/
-│   ├─ 01_tiendaonline_schema.sql
-│   ├─ 02_tiendaonline_seed.sql
-│   └─ 03_tiendaonline_test_queries.sql
+│ ├─ 01_tiendaonline_schema.sql
+│ ├─ 02_tiendaonline_seed.sql
+│ └─ 03_tiendaonline_test_queries.sql
 │
 ├─ src/main/java/com/ulatina/basesdedatos2/tiendaonline/
-│   ├─ model/
-│   ├─ repo/
-│   ├─ service/
-│   └─ web/
+│ ├─ model/
+│ ├─ repo/
+│ ├─ service/
+│ └─ web/
 │
 ├─ resources/
-│   └─ application.properties
+│ └─ application.properties
 │
 └─ public/
-    ├─ index.html
-    ├─ gestor.html
-    └─ assets/
-
+├─ index.html
+├─ gestor.html
+└─ assets/
+```
 ------------------------------------------------------------
 2. SQL FILES OVERVIEW
 ------------------------------------------------------------
@@ -120,12 +120,12 @@ Archivo:
 resources/application.properties
 
 Contenido:
-
+```
 db.url=jdbc:sqlserver://localhost:1433;databaseName=tiendaonline;encrypt=true;trustServerCertificate=true;
 db.username=app_user
 db.password=*************
 db.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
-
+```
 ------------------------------------------------------------
 6. JAVA PACKAGE STRUCTURE
 ------------------------------------------------------------
