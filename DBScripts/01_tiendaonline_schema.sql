@@ -753,5 +753,73 @@ GRANT SELECT ON dbo.ofertas       TO app_ro;
 GRANT SELECT ON dbo.facturas      TO app_ro;
 GRANT SELECT ON dbo.ventas        TO app_ro;
 
+/*==============================================================*
+  8. CUENTA TÉCNICA PARA LA APLICACIÓN JAVA (LOGIN app_user)
+  
+  - Crea el LOGIN a nivel de servidor (master).
+  - Crea el USER dentro de la base de datos tiendaonline.
+  - Asigna el rol de base de datos app_rw (lectura/escritura
+    para la aplicación web).
+  
+  Esta cuenta se utiliza exclusivamente desde la aplicación Java
+  vía JDBC, con la cadena de conexión documentada en el README:
+  
+    USER = app_user
+    PASS = ChangeThis!123
+ *==============================================================*/
+
+---------------------------------------------------------------
+-- 8.1. Crear LOGIN a nivel de servidor (master)
+--      Solo se ejecuta si no existe previamente.
+---------------------------------------------------------------
+USE master;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.sql_logins
+    WHERE name = N'app_user'
+)
+BEGIN
+    CREATE LOGIN [app_user]
+    WITH PASSWORD = 'ChangeThis!123',
+         CHECK_POLICY = OFF;  -- Para laboratorio: evita exigir complejidad
+END
+GO
+
+---------------------------------------------------------------
+-- 8.2. Crear USER dentro de la base de datos tiendaonline
+--      y asociarlo al LOGIN app_user.
+---------------------------------------------------------------
+USE tiendaonline;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.database_principals
+    WHERE name = N'app_user'
+)
+BEGIN
+    CREATE USER [app_user] FOR LOGIN [app_user];
+END
+GO
+
+---------------------------------------------------------------
+-- 8.3. Asociar app_user al rol de base de datos app_rw
+--      (rol técnico de la aplicación con permisos CRUD).
+---------------------------------------------------------------
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.database_role_members rm
+    JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
+    JOIN sys.database_principals u ON rm.member_principal_id = u.principal_id
+    WHERE r.name = N'app_rw'
+      AND u.name = N'app_user'
+)
+BEGIN
+    EXEC sp_addrolemember N'app_rw', N'app_user';
+END
+GO
+
 PRINT 'Esquema TiendaOnline creado y permisos configurados correctamente.';
 GO
