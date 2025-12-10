@@ -21,20 +21,20 @@ GO
 ---------------------------------------------------------------
 -- LIMPIEZA GLOBAL (DROP EN ORDEN DE DEPENDENCIAS)
 ---------------------------------------------------------------
-IF OBJECT_ID('dbo.ventas','U')              IS NOT NULL DROP TABLE dbo.ventas;
-IF OBJECT_ID('dbo.facturas','U')           IS NOT NULL DROP TABLE dbo.facturas;
+IF OBJECT_ID('dbo.ventas','U')               IS NOT NULL DROP TABLE dbo.ventas;
+IF OBJECT_ID('dbo.facturas','U')            IS NOT NULL DROP TABLE dbo.facturas;
 IF OBJECT_ID('dbo.usuarios_frecuentes','U') IS NOT NULL DROP TABLE dbo.usuarios_frecuentes;
-IF OBJECT_ID('dbo.user_roles','U')         IS NOT NULL DROP TABLE dbo.user_roles;
-IF OBJECT_ID('dbo.alertas','U')            IS NOT NULL DROP TABLE dbo.alertas;
-IF OBJECT_ID('dbo.ofertas','U')            IS NOT NULL DROP TABLE dbo.ofertas;
-IF OBJECT_ID('dbo.existencias','U')        IS NOT NULL DROP TABLE dbo.existencias;
+IF OBJECT_ID('dbo.user_roles','U')          IS NOT NULL DROP TABLE dbo.user_roles;
+IF OBJECT_ID('dbo.alertas','U')             IS NOT NULL DROP TABLE dbo.alertas;
+IF OBJECT_ID('dbo.ofertas','U')             IS NOT NULL DROP TABLE dbo.ofertas;
+IF OBJECT_ID('dbo.existencias','U')         IS NOT NULL DROP TABLE dbo.existencias;
 IF OBJECT_ID('dbo.productos_proveedores','U') IS NOT NULL DROP TABLE dbo.productos_proveedores;
-IF OBJECT_ID('dbo.productos','U')          IS NOT NULL DROP TABLE dbo.productos;
-IF OBJECT_ID('dbo.proveedores','U')        IS NOT NULL DROP TABLE dbo.proveedores;
-IF OBJECT_ID('dbo.notificaciones','U')     IS NOT NULL DROP TABLE dbo.notificaciones;
-IF OBJECT_ID('dbo.audit_log','U')          IS NOT NULL DROP TABLE dbo.audit_log;
-IF OBJECT_ID('dbo.users','U')              IS NOT NULL DROP TABLE dbo.users;
-IF OBJECT_ID('dbo.roles','U')              IS NOT NULL DROP TABLE dbo.roles;
+IF OBJECT_ID('dbo.productos','U')           IS NOT NULL DROP TABLE dbo.productos;
+IF OBJECT_ID('dbo.proveedores','U')         IS NOT NULL DROP TABLE dbo.proveedores;
+IF OBJECT_ID('dbo.notificaciones','U')      IS NOT NULL DROP TABLE dbo.notificaciones;
+IF OBJECT_ID('dbo.audit_log','U')           IS NOT NULL DROP TABLE dbo.audit_log;
+IF OBJECT_ID('dbo.users','U')               IS NOT NULL DROP TABLE dbo.users;
+IF OBJECT_ID('dbo.roles','U')               IS NOT NULL DROP TABLE dbo.roles;
 
 /*==============================================================*
   1. TABLAS DE SEGURIDAD (ROLES Y CONTROL DE ACCESO A NIVEL APP)
@@ -742,6 +742,11 @@ GRANT EXECUTE ON dbo.sp_RegistrarEntradaInventario  TO app_rw;
 GRANT EXECUTE ON dbo.sp_RegistrarVentaSimple        TO app_rw;
 GRANT EXECUTE ON dbo.sp_RevisarInventarioEnvejecido TO app_rw;
 
+-- Permisos de lectura sobre vistas de negocio para la aplicación web (app_rw)
+GRANT SELECT ON dbo.v_CatalogoProductos TO app_rw;
+GRANT SELECT ON dbo.v_StockBajo         TO app_rw;
+GRANT SELECT ON dbo.v_VentasPorDia      TO app_rw;
+
 -- app_ro: solo lectura sobre vistas y tablas clave
 GRANT SELECT ON dbo.v_CatalogoProductos TO app_ro;
 GRANT SELECT ON dbo.v_StockBajo         TO app_ro;
@@ -819,6 +824,24 @@ IF NOT EXISTS (
 BEGIN
     EXEC sp_addrolemember N'app_rw', N'app_user';
 END
+GO
+
+/*==============================================================*
+  9. PRUEBA OPCIONAL: VERIFICAR PERMISOS DE app_user
+  Esta sección permite comprobar, en entorno de laboratorio,
+  que el usuario técnico app_user puede consultar el catálogo.
+  Puede comentarse en un entorno productivo.
+ *==============================================================*/
+
+USE tiendaonline;
+GO
+
+EXECUTE AS USER = 'app_user';
+
+SELECT TOP (5) *
+FROM dbo.v_CatalogoProductos;
+
+REVERT;
 GO
 
 PRINT 'Esquema TiendaOnline creado y permisos configurados correctamente.';
