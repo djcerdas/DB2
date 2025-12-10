@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TiendaOnline - Vendedor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 1.5rem;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .panel {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .status {
+            margin: 0.5rem 0 1rem 0;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .status.error {
+            color: #b00020;
+        }
+
+        .status.ok {
+            color: #1b5e20;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: #eeeeee;
+        }
+
+        th, td {
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .small {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: #eeeeee;
+        }
+
+        .badge.web {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .badge.tienda {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .badge.redes {
+            background: #fce4ec;
+            color: #ad1457;
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel">
+    <h1>TiendaOnline - Vendedor</h1>
+    <p>Aquí el vendedor podrá registrar ventas y emitir facturas.</p>
+    <p class="small">Esta página se ampliará en futuras versiones.</p>
+</div>
+
+<div class="panel">
+    <h2>Ventas recientes</h2>
+    <p id="status" class="status">Cargando ventas...</p>
+
+    <div id="tabla-wrapper">
+        <table id="tabla-ventas" style="display:none;">
+            <thead>
+            <tr>
+                <th>Factura</th>
+                <th>Fecha</th>
+                <th>Canal</th>
+                <th>Método pago</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Total sin IVA</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <p id="no-data" class="text-center small" style="display:none;">
+            No hay ventas registradas para mostrar.
+        </p>
+    </div>
+</div>
+
+<script>
+    function canalBadge(canal) {
+        const c = (canal || "").toLowerCase();
+        if (c === "web")    return `<span class="badge web">web</span>`;
+        if (c === "tienda") return `<span class="badge tienda">tienda</span>`;
+        if (c === "redes")  return `<span class="badge redes">redes</span>`;
+        return `<span class="badge">${canal || "N/A"}</span>`;
+    }
+
+    function cargarVentas() {
+        const statusEl  = document.getElementById('status');
+        const tabla     = document.getElementById('tabla-ventas');
+        const tbody     = tabla.querySelector('tbody');
+        const noDataEl  = document.getElementById('no-data');
+
+        statusEl.textContent = 'Cargando ventas...';
+        statusEl.className   = 'status';
+
+        fetch('/api/vendedor/ventas-recientes')
+            .then(resp => {
+                if (!resp.ok) {
+                    if (resp.status === 401 || resp.status === 403) {
+                        throw new Error('No autorizado. Inicie sesión como Vendedor.');
+                    }
+                    throw new Error('Error al consultar ventas (HTTP ' + resp.status + ').');
+                }
+                return resp.json();
+            })
+            .then(data => {
+                console.log('Ventas recientes:', data);
+
+                tbody.innerHTML = '';
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    tabla.style.display   = 'none';
+                    noDataEl.style.display = 'block';
+                    statusEl.textContent  = 'No hay ventas registradas aún.';
+                    statusEl.className    = 'status ok';
+                    return;
+                }
+
+                data.forEach(v => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${v.numero_factura}</td>
+                        <td>${v.fecha || ''}</td>
+                        <td>${canalBadge(v.canal)}</td>
+                        <td>${v.metodo_pago || ''}</td>
+                        <td>${v.codigo_producto}</td>
+                        <td>${v.cantidad}</td>
+                        <td>${v.total_sin_iva}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                tabla.style.display    = 'table';
+                noDataEl.style.display = 'none';
+                statusEl.textContent   = 'Mostrando ' + data.length + ' registro(s) de venta.';
+                statusEl.className     = 'status ok';
+            })
+            .catch(err => {
+                console.error(err);
+                statusEl.textContent = err.message || 'Error cargando ventas.';
+                statusEl.className   = 'status error';
+                tabla.style.display  = 'none';
+                noDataEl.style.display = 'none';
+            });
+    }
+
+    // Ejecutar al cargar la página
+    cargarVentas();
+</script>
+<style>
+.logout-btn {
+    float: right;
+    padding: 8px 14px;
+    background: #d32f2f;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+}
+.logout-btn:hover {
+    background: #b71c1c;
+}
+</style>
+
+<a class="logout-btn" href="/logout">Cerrar sesión</a>
+</body>
+</html>

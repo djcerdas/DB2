@@ -1,0 +1,6 @@
+/target/
+/.idea/
+/.vscode/
+*.iml
+
+config/db_credentials.txt

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TiendaOnline – Owner Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fafafa; padding: 16px; }
+        h1 { margin-bottom: 4px; }
+        section {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        th, td {
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+<h1>TiendaOnline – Panel del Dueño</h1>
+<p>Visualización de ventas y stock bajo, basado en vistas de la base de datos.</p>
+
+<section>
+    <h2>Ventas por día</h2>
+    <table id="tblVentas">
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th># Facturas</th>
+            <th>Total sin IVA</th>
+            <th>Total con IVA</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>
+
+<section>
+    <h2>Productos con stock bajo</h2>
+    <table id="tblStockBajo">
+        <thead>
+        <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Stock total</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>
+
+<script>
+    function cargarVentas() {
+        fetch('/api/owner/ventas-diarias')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector('#tblVentas tbody');
+                tbody.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML =
+                        `<td>${row.fecha}</td>` +
+                        `<td>${row.cantidad_facturas}</td>` +
+                        `<td>${row.total_sin_iva}</td>` +
+                        `<td>${row.total_con_iva}</td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    function cargarStockBajo() {
+        fetch('/api/owner/stock-bajo')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector('#tblStockBajo tbody');
+                tbody.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML =
+                        `<td>${row.codigo_producto}</td>` +
+                        `<td>${row.nombre}</td>` +
+                        `<td>${row.stock_total}</td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    cargarVentas();
+    cargarStockBajo();
+</script>
+<style>
+.logout-btn {
+    float: right;
+    padding: 8px 14px;
+    background: #d32f2f;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+}
+.logout-btn:hover {
+    background: #b71c1c;
+}
+</style>
+
+<a class="logout-btn" href="/logout">Cerrar sesión</a>
+</body>
+
+</html>

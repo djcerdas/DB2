@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TiendaOnline – Catálogo</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fafafa; margin: 0; }
+        header {
+            background: #0078d4;
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .catalogo {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .card img {
+            max-width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #eee;
+        }
+        .card h3 { margin: 8px 0 4px; }
+        .precio {
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        .badge-oferta {
+            background: #c0392b;
+            color: white;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+        .acciones {
+            margin-top: auto;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .acciones input {
+            width: 60px;
+        }
+        button {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #0078d4;
+            color: white;
+        }
+        button.secondary {
+            background: #666;
+        }
+        #carritoPanel {
+            background: white;
+            border-top: 1px solid #ddd;
+            padding: 12px 16px;
+        }
+        #carritoLista {
+            font-size: 14px;
+        }
+        #mensaje {
+            margin-left: 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <strong>TiendaOnline</strong> – Catálogo
+    </div>
+    <div>
+        <button id="btnVerCarrito" type="button">Ver carrito</button>
+        <button id="btnCheckout" type="button">Comprar</button>
+        <span id="mensaje"></span>
+    </div>
+</header>
+
+<section class="catalogo" id="catalogo"></section>
+
+<div id="carritoPanel">
+    <h3>Carrito</h3>
+    <div id="carritoLista">Tu carrito está vacío.</div>
+</div>
+
+<script>
+    const catalogoEl = document.getElementById('catalogo');
+    const carritoListaEl = document.getElementById('carritoLista');
+    const mensajeEl = document.getElementById('mensaje');
+
+    const carrito = new Map();
+
+    function cargarCatalogo() {
+        fetch('/api/catalogo')
+            .then(r => r.json())
+            .then(data => {
+                catalogoEl.innerHTML = '';
+                data.forEach(prod => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const img = document.createElement('img');
+                    img.src = prod.imagenUrl || '';
+                    img.alt = prod.nombre;
+                    card.appendChild(img);
+
+                    const h3 = document.createElement('h3');
+                    h3.textContent = prod.nombre;
+                    card.appendChild(h3);
+
+                    const pDetalle = document.createElement('p');
+                    pDetalle.textContent = `Talla: ${prod.talla} | Color: ${prod.color} | Estilo: ${prod.estilo || '-'}`;
+                    card.appendChild(pDetalle);
+
+                    const precioDiv = document.createElement('div');
+                    precioDiv.className = 'precio';
+                    const precioBase = prod.precioVenta.toFixed(2);
+                    let texto = `₡${precioBase}`;
+                    if (prod.descuentoPctActivo && prod.descuentoPctActivo > 0) {
+                        texto += `  →  ₡${prod.precioConDescuento.toFixed(2)}`;
+                        const badge = document.createElement('span');
+                        badge.className = 'badge-oferta';
+                        badge.textContent = `-${prod.descuentoPctActivo}%`;
+                        precioDiv.textContent = texto;
+                        precioDiv.appendChild(badge);
+                    } else {
+                        precioDiv.textContent = texto;
+                    }
+                    card.appendChild(precioDiv);
+
+                    const stockP = document.createElement('p');
+                    stockP.textContent = `Stock: ${prod.stockTotal}`;
+                    card.appendChild(stockP);
+
+                    const acciones = document.createElement('div');
+                    acciones.className = 'acciones';
+
+                    const inputCant = document.createElement('input');
+                    inputCant.type = 'number';
+                    inputCant.min = '1';
+                    inputCant.value = '1';
+
+                    const btnAgregar = document.createElement('button');
+                    btnAgregar.textContent = 'Agregar';
+                    btnAgregar.onclick = () => {
+                        const cant = parseInt(inputCant.value || '1', 10);
+                        if (cant <= 0) return;
+                        agregarAlCarrito(prod, cant);
+                    };
+
+                    const btnQuitar = document.createElement('button');
+                    btnQuitar.textContent = 'Quitar';
+                    btnQuitar.className = 'secondary';
+                    btnQuitar.onclick = () => {
+                        quitarDelCarrito(prod.codigoProducto);
+                    };
+
+                    acciones.appendChild(inputCant);
+                    acciones.appendChild(btnAgregar);
+                    acciones.appendChild(btnQuitar);
+                    card.appendChild(acciones);
+
+                    catalogoEl.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                catalogoEl.innerHTML = '<p>Error cargando catálogo.</p>';
+            });
+    }
+
+    function agregarAlCarrito(prod, cantidad) {
+        const existente = carrito.get(prod.codigoProducto) || { producto: prod, cantidad: 0 };
+        existente.cantidad += cantidad;
+        if (existente.cantidad <= 0) {
+            carrito.delete(prod.codigoProducto);
+        } else {
+            carrito.set(prod.codigoProducto, existente);
+        }
+        renderCarrito();
+    }
+
+    function quitarDelCarrito(codigoProducto) {
+        carrito.delete(codigoProducto);
+        renderCarrito();
+    }
+
+    function renderCarrito() {
+        if (carrito.size === 0) {
+            carritoListaEl.textContent = 'Tu carrito está vacío.';
+            return;
+        }
+        let html = '<ul>';
+        carrito.forEach(entry => {
+            html += `<li>${entry.producto.nombre} (x${entry.cantidad})</li>`;
+        });
+        html += '</ul>';
+        carritoListaEl.innerHTML = html;
+    }
+
+    document.getElementById('btnCheckout').onclick = () => {
+        if (carrito.size === 0) {
+            alert('El carrito está vacío');
+            return;
+        }
+        const items = [];
+        carrito.forEach(entry => {
+            items.push({
+                codigoProducto: entry.producto.codigoProducto,
+                cantidad: entry.cantidad
+            });
+        });
+
+        fetch('/api/cart/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                canal: 'web',
+                metodoPago: 'tarjeta',
+                items: items
+            })
+        })
+            .then(r => r.json())
+            .then(resp => {
+                mensajeEl.textContent = resp.message;
+                if (resp.ok) {
+                    carrito.clear();
+                    renderCarrito();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                mensajeEl.textContent = 'Error procesando compra';
+            });
+    };
+
+    cargarCatalogo();
+</script>
+<style>
+.logout-btn {
+    float: right;
+    padding: 8px 14px;
+    background: #d32f2f;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+}
+.logout-btn:hover {
+    background: #b71c1c;
+}
+</style>
+
+<a class="logout-btn" href="/logout">Cerrar sesión</a>
+</body>
+</html>
