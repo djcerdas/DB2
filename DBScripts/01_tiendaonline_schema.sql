@@ -18,6 +18,24 @@ GO
 USE tiendaonline;
 GO
 
+---------------------------------------------------------------
+-- LIMPIEZA GLOBAL (DROP EN ORDEN DE DEPENDENCIAS)
+---------------------------------------------------------------
+IF OBJECT_ID('dbo.ventas','U')              IS NOT NULL DROP TABLE dbo.ventas;
+IF OBJECT_ID('dbo.facturas','U')           IS NOT NULL DROP TABLE dbo.facturas;
+IF OBJECT_ID('dbo.usuarios_frecuentes','U') IS NOT NULL DROP TABLE dbo.usuarios_frecuentes;
+IF OBJECT_ID('dbo.user_roles','U')         IS NOT NULL DROP TABLE dbo.user_roles;
+IF OBJECT_ID('dbo.alertas','U')            IS NOT NULL DROP TABLE dbo.alertas;
+IF OBJECT_ID('dbo.ofertas','U')            IS NOT NULL DROP TABLE dbo.ofertas;
+IF OBJECT_ID('dbo.existencias','U')        IS NOT NULL DROP TABLE dbo.existencias;
+IF OBJECT_ID('dbo.productos_proveedores','U') IS NOT NULL DROP TABLE dbo.productos_proveedores;
+IF OBJECT_ID('dbo.productos','U')          IS NOT NULL DROP TABLE dbo.productos;
+IF OBJECT_ID('dbo.proveedores','U')        IS NOT NULL DROP TABLE dbo.proveedores;
+IF OBJECT_ID('dbo.notificaciones','U')     IS NOT NULL DROP TABLE dbo.notificaciones;
+IF OBJECT_ID('dbo.audit_log','U')          IS NOT NULL DROP TABLE dbo.audit_log;
+IF OBJECT_ID('dbo.users','U')              IS NOT NULL DROP TABLE dbo.users;
+IF OBJECT_ID('dbo.roles','U')              IS NOT NULL DROP TABLE dbo.roles;
+
 /*==============================================================*
   1. TABLAS DE SEGURIDAD (ROLES Y CONTROL DE ACCESO A NIVEL APP)
  *==============================================================*/
@@ -715,7 +733,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.usuarios_frecuentes TO app_rw;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.alertas             TO app_rw;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.notificaciones      TO app_rw;
 
-GRANT SELECT ON dbo.roles, dbo.users, dbo.user_roles TO app_rw;
+GRANT SELECT ON dbo.roles      TO app_rw;
+GRANT SELECT ON dbo.users      TO app_rw;
+GRANT SELECT ON dbo.user_roles TO app_rw;
 
 GRANT EXECUTE ON dbo.sp_RegistrarProducto           TO app_rw;
 GRANT EXECUTE ON dbo.sp_RegistrarEntradaInventario  TO app_rw;
